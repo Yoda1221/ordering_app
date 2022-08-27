@@ -1,9 +1,11 @@
-import Counter from "./features/counter/Counter"
+import PostsList from "./features/posts/PostsList"
+import AddPost from "./features/posts/AddPost"
 
 function App() {
   return (
     <main className="App">
-      <Counter />
+      <AddPost />
+      <PostsList />
     </main>
   )
 }
