@@ -68,23 +68,6 @@ const postsSlice = createSlice({
     name: 'posts',
     initialState,
     reducers: {
-        /* increaseCount: {
-            reducer(state, action) {
-                state.posts.push(action.payload)
-            },
-            prepare(title, content, userId) {
-                return {
-                    payload: {
-                        id: nanoid(),
-                        title,
-                        content,
-                        userId,
-                        date: new Date().toISOString(),
-                        reactions: emojies
-                    }
-                }
-            }
-        }, */
         reactionAdded(state, action) {
             const { postId, reaction } = action.payload
             const existingPost = state.entities[postId]
@@ -96,80 +79,68 @@ const postsSlice = createSlice({
     },
     extraReducers(builder) {
         builder
-            .addCase(fetchPosts.pending, (state, action) => {
-                state.status = 'loading'
+        .addCase(fetchPosts.pending, (state, action) => {
+            state.status = 'loading'
+        })
+        .addCase(fetchPosts.fulfilled, (state, action) => {
+            state.status = 'succeeded'
+            //* ADDING DATE AND REACTIONS
+            let min = 1
+            const loadedPosts = action.payload.map(post => {
+                post.date = sub(new Date(), { minutes: min++ }).toISOString()
+                post.reactions = emojies
+                return post
             })
-            .addCase(fetchPosts.fulfilled, (state, action) => {
-                state.status = 'succeeded'
-                // Adding date and reactions
-                let min = 1
-                const loadedPosts = action.payload.map(post => {
-                    post.date = sub(new Date(), { minutes: min++ }).toISOString();
-                    post.reactions = emojies
-                    return post
-                });
 
-                // Add any fetched posts to the array
-                postsAdapter.upsertMany(state, loadedPosts)
+            //* ADD ANY FETCHED POSTS TO THE ARRAY
+            postsAdapter.upsertMany(state, loadedPosts)
+        })
+        .addCase(fetchPosts.rejected, (state, action) => {
+            state.status = 'failed'
+            state.error = action.error.message
+        })
+        .addCase(addNewPost.fulfilled, (state, action) => {
+            const sortedPosts = state.posts.sort((a, b) => {
+                if (a.id > b.id) return 1
+                if (a.id < b.id) return -1
+                return 0
             })
-            .addCase(fetchPosts.rejected, (state, action) => {
-                state.status = 'failed'
-                state.error = action.error.message
-            })
-            .addCase(addNewPost.fulfilled, (state, action) => {
-                // Fix for API post IDs:
-                // Creating sortedPosts & assigning the id 
-                // would be not be needed if the fake API 
-                // returned accurate new post IDs
-                const sortedPosts = state.posts.sort((a, b) => {
-                    if (a.id > b.id) return 1
-                    if (a.id < b.id) return -1
-                    return 0
-                })
-                action.payload.id = sortedPosts[sortedPosts.length - 1].id + 1;
-                // End fix for fake API post IDs 
-                action.payload.userId = Number(action.payload.userId)
-                action.payload.date = new Date().toISOString();
-                action.payload.reactions = emojies
+            action.payload.id       = sortedPosts[sortedPosts.length - 1].id + 1
+            action.payload.userId   = Number(action.payload.userId)
+            action.payload.date     = new Date().toISOString()
+            action.payload.reactions = emojies
+
+            console.log(action.payload)
+            postsAdapter.addOne(state, action.payload)
+        })
+        .addCase(updatePost.fulfilled, (state, action) => {
+            if (!action.payload?.id) {
+                console.log('Update could not complete')
                 console.log(action.payload)
-                postsAdapter.addOne(state, action.payload)
-            })
-            .addCase(updatePost.fulfilled, (state, action) => {
-                if (!action.payload?.id) {
-                    console.log('Update could not complete')
-                    console.log(action.payload)
-                    return
-                }
-                action.payload.date = new Date().toISOString()
-                postsAdapter.upsertOne(state, action.payload)
-            })
-            .addCase(deletePost.fulfilled, (state, action) => {
-                if (!action.payload?.id) {
-                    console.log('Delete could not complete')
-                    console.log(action.payload)
-                    return
-                }
-                const { id } = action.payload
-                postsAdapter.removeOne(state, id)
-            })
+                return
+            }
+            action.payload.date = new Date().toISOString()
+            postsAdapter.upsertOne(state, action.payload)
+        })
+        .addCase(deletePost.fulfilled, (state, action) => {
+            if (!action.payload?.id) {
+                console.log('DELETE COULD NOT COMPLETE ', action.payload)
+                return
+            }
+            const { id } = action.payload
+            postsAdapter.removeOne(state, id)
+        })
     }
 })
 
-//getSelectors creates these selectors and we rename them with aliases using destructuring
 export const {
     selectAll: selectAllPosts,
     selectById: selectPostById,
     selectIds: selectPostIds
-    // Pass in a selector that returns the posts slice of state
 } = postsAdapter.getSelectors(state => state.posts)
-
-
 export const getCount       = (state) => state.posts.count
 export const getPostsError  = (state) => state.posts.error
 export const getPostsStatus = (state) => state.posts.status
-//export const selectAllPosts = (state) => state.posts.posts
-/* export const selectPostById = (state, postId) =>
-    state.posts.posts.find(post => post.id === postId) */
 export const selectPostsByUser = createSelector(
     [selectAllPosts, (state, userId) => userId],
     (posts, userId) => posts.filter(post => post.userId === userId)

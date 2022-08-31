@@ -3,9 +3,9 @@ import PostsExcerpt     from './PostsExcerpt'
 import { selectPostIds, getPostsStatus, getPostsError } from './postsSlice'
 
 const PostsList = () => {
-  const postsError  = useSelector(getPostsError)
-  const postsStatus = useSelector(getPostsStatus)
-  const orderedPostIds = useSelector(selectPostIds)
+  const orderedPostIds  = useSelector(selectPostIds)
+  const postsError      = useSelector(getPostsError)
+  const postsStatus     = useSelector(getPostsStatus)
 
   let content
   if (postsStatus === 'loading') content = <p>"Loading..."</p>
