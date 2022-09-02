@@ -1,4 +1,3 @@
-import { selectUsersIds, useGetUserQuery } from './usersSlice'
 import { Link }             from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { selectAllUsers } from './usersSlice'
