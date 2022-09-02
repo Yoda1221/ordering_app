@@ -3,14 +3,14 @@ import App            from './App'
 import { store }      from './app/store'
 import { Provider }   from 'react-redux'
 import { createRoot } from 'react-dom/client'
-import { fetchUsers } from './features/users/usersSlice'
-import { extendedApiSlice } from './features/posts/postsSlice'
+import { extendUserApiSlice } from './features/users/usersSlice'
+import { extendedApiSlice }   from './features/posts/postsSlice'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
 import './index.css'
 
 store.dispatch(extendedApiSlice.endpoints.getPosts.initiate())
-store.dispatch(fetchUsers())
+store.dispatch(extendUserApiSlice.endpoints.getUsers.initiate())
 
 createRoot(document.getElementById('root'))
 .render(

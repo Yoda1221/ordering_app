@@ -3,11 +3,9 @@ import { selectUserById }   from '../users/usersSlice'
 import { Link, useParams }  from 'react-router-dom'
 import { useGetPostsByUserIdQuery } from '../posts/postsSlice'
 
-import React from 'react'
-
 const UserPage = () => {
-  const { userId }    = useParams()
-  const user          = useSelector(state => selectUserById(state, Number(userId)))
+  const { userId }  = useParams()
+  const user        = useSelector(state => selectUserById(state, Number(userId)))
   const {
     data: postsForUser,
     isLoading,
